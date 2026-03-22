@@ -1,0 +1,22 @@
+# Backend runtime
+node_modules/
+.env
+data.json
+
+# Original Frontend Source (to be hidden)
+index.html
+admin.html
+app.js
+admin-logic.js
+styles.css
+script.js
+obfuscate.js
+obfuscate.py
+custom cursor/
+images/
+
+# DO NOT IGNORE the production build
+!obfuscated/
+!server.js
+!package.json
+!package-lock.json
