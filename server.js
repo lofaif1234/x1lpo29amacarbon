@@ -8,136 +8,134 @@ const fs = require('fs');
 const { Octokit } = require('octokit');
 const bodyParser = require('body-parser');
 
-const app = express();
-const server = http.createServer(app);
-const io = new Server(server, { cors: { origin: "*", methods: ["GET", "POST"] } });
-
+// CONFIGURATION
 const PORT = process.env.PORT || 3000;
 const DATA_FILE = path.join(__dirname, 'data.json');
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
-const GITHUB_REPO_OWNER = 'lofaif1234';
-const GITHUB_REPO_NAME = 'x1lpo29amacarbon';
-const LICENSE_HASH = "b10b7769dfe6c5eaa5862ea22bee59a81a081ca97a0a7d3bee195f4e541f4428";
+const REPO_OWNER = 'lofaif1234';
+const REPO_NAME = 'x1lpo29amacarbon';
+const ADMIN_HASH = "b10b7769dfe6c5eaa5862ea22bee59a81a081ca97a0a7d3bee195f4e541f4428"; // Key was: melissa1i1i2i3ia82@!!a
 
-function adminAuth(req, res, next) {
-    const auth = req.headers['authorization'];
-    if (auth === LICENSE_HASH) { return next(); }
-    res.status(403).json({ error: 'Unauthorized' });
+const app = express();
+const server = http.createServer(app);
+const io = new Server(server, {
+    cors: { origin: "*", methods: ["GET", "POST"] }
+});
+
+// GITHUB SYNC LOGIC
+const octokit = GITHUB_TOKEN ? new Octokit({ auth: GITHUB_TOKEN }) : null;
+
+async function syncFromGitHub() {
+    if (!octokit) return console.log("[SYNC] No GitHub token. Using local data.");
+    try {
+        const { data: fileData } = await octokit.rest.repos.getContent({
+            owner: REPO_OWNER, repo: REPO_NAME, path: 'data.json'
+        });
+        const content = Buffer.from(fileData.content, 'base64').toString();
+        fs.writeFileSync(DATA_FILE, content);
+        console.log("[SYNC] Pulled latest data.json from GitHub.");
+    } catch (e) {
+        console.log("[SYNC] Could not pull from GitHub, using local fallback.");
+    }
 }
 
 async function pushToGitHub(filePath, content, message) {
-    if (!GITHUB_TOKEN) return;
+    if (!octokit) return;
     try {
-        const octokit = new Octokit({ auth: GITHUB_TOKEN });
         let sha;
         try {
             const { data: fileData } = await octokit.rest.repos.getContent({
-                owner: GITHUB_REPO_OWNER, repo: GITHUB_REPO_NAME,
-                path: filePath,
+                owner: REPO_OWNER, repo: REPO_NAME, path: filePath
             });
             sha = fileData.sha;
         } catch (e) { }
+
         await octokit.rest.repos.createOrUpdateFileContents({
-            owner: GITHUB_REPO_OWNER,
-            repo: GITHUB_REPO_NAME,
+            owner: REPO_OWNER,
+            repo: REPO_NAME,
             path: filePath,
             message: message,
             content: Buffer.from(content).toString('base64'),
             sha: sha
         });
-    } catch (error) { console.error(`GitHub Push failed for ${filePath}:`, error.message); }
+        console.log(`[SYNC] Pushed ${filePath} to GitHub.`);
+    } catch (e) {
+        console.error(`[SYNC] GitHub Push Error for ${filePath}:`, e.message);
+    }
 }
 
-async function syncDataFromGitHub() {
-    if (!GITHUB_TOKEN) return;
-    try {
-        const octokit = new Octokit({ auth: GITHUB_TOKEN });
-        const { data: fileData } = await octokit.rest.repos.getContent({
-            owner: GITHUB_REPO_OWNER, repo: GITHUB_REPO_NAME,
-            path: 'data.json',
-        });
-        const content = Buffer.from(fileData.content, 'base64').toString();
-        fs.writeFileSync(DATA_FILE, content);
-        console.log('Data synced from GitHub');
-    } catch (e) { console.warn('Could not sync data from GitHub, using local.'); }
+// DATA ACCESS
+function getDB() {
+    if (!fs.existsSync(DATA_FILE)) {
+        return { executors: [], games: [], scripts: [] };
+    }
+    return JSON.parse(fs.readFileSync(DATA_FILE));
 }
 
-if (!fs.existsSync(DATA_FILE)) {
-    const defaultData = {
-        executors: [
-            { id: 1, name: 'Carbon API', status: 'Online', unc: '100%', sunc: '100%', type: 'Free' },
-            { id: 2, name: 'Synapse Z', status: 'Updating', unc: '98%', sunc: '95%', type: 'Paid' }
-        ],
-        games: [
-            { id: 1, title: 'Evade Overhaul', logo: 'https://tr.rbxcdn.com/39a6ba2c6e61298c4d29cae97ac471c2/768/432/Image/Png', link: 'https://www.roblox.com/games/7133251093/Evade', description: 'Features, Automatic Farm, Visual items, Name tag changer, Player modifications and 60+ more features.' }
-        ],
-        scripts: []
-    };
-    fs.writeFileSync(DATA_FILE, JSON.stringify(defaultData, null, 2));
-}
-
-function getData() { return JSON.parse(fs.readFileSync(DATA_FILE)); }
-function saveData(data) {
+function saveDB(data) {
     fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
-    pushToGitHub('data.json', JSON.stringify(data, null, 2), 'Update data.json');
+    pushToGitHub('data.json', JSON.stringify(data, null, 2), 'Auto-update data.json');
 }
 
+// MIDDLEWARE
 app.use(cors());
 app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, 'docs')));
 
-app.get('/api/data', (req, res) => { res.json(getData()); });
+const adminAuth = (req, res, next) => {
+    if (req.headers['authorization'] === ADMIN_HASH) return next();
+    res.status(403).json({ success: false, error: 'Unauthorized' });
+};
+
+// API ROUTES
+app.get('/api/data', (req, res) => res.json(getDB()));
 
 app.post('/api/admin/save', adminAuth, (req, res) => {
     const { executors, games } = req.body;
-    const data = getData();
-    if (executors) data.executors = executors;
-    if (games) data.games = games;
-    saveData(data);
-    io.emit('data_updated', data);
+    const db = getDB();
+    if (executors) db.executors = executors;
+    if (games) db.games = games;
+    saveDB(db);
+    io.emit('data_updated', db);
     res.json({ success: true });
 });
 
-io.on('connection', (socket) => {
-    socket.emit('initial_data', getData());
-});
-
-app.get('/scripts/:scriptName', (req, res) => {
-    const userAgent = req.headers['user-agent'] || '';
-    const isBrowser = /Mozilla|Chrome|Safari|Edge|Opera/i.test(userAgent);
-    if (isBrowser) { return res.redirect('/'); }
-    const data = getData();
-    const script = data.scripts.find(s => s.name === req.params.scriptName);
-    if (script) {
-        res.setHeader('Content-Type', 'text/plain');
-        return res.send(script.content);
-    }
-    res.status(404).send('Script not found');
-});
-
 app.post('/api/admin/add-script', adminAuth, async (req, res) => {
-    const { scriptName, scriptContent } = req.body;
-    if (!scriptName || !scriptContent) return res.status(400).json({ error: 'Missing data' });
-    const data = getData();
-    const newScriptName = scriptName.endsWith('.lua') ? scriptName : scriptName + '.lua';
-    const newScript = {
-        name: newScriptName,
-        content: scriptContent,
-        createdAt: new Date().toISOString()
-    };
-    const index = data.scripts.findIndex(s => s.name === newScript.name);
-    if (index !== -1) data.scripts[index] = newScript;
-    else data.scripts.push(newScript);
-    saveData(data);
-    pushToGitHub(`scripts/${newScriptName}`, newScript.content, `Update script: ${newScriptName}`);
+    const { name, content } = req.body;
+    if (!name || !content) return res.status(400).json({ error: 'Missing name/content' });
+
+    const db = getDB();
+    const fileName = name.endsWith('.lua') ? name : name + '.lua';
+    const newScript = { name: fileName, content, timestamp: new Date().toISOString() };
+
+    const index = db.scripts.findIndex(s => s.name === fileName);
+    if (index !== -1) db.scripts[index] = newScript;
+    else db.scripts.push(newScript);
+
+    saveDB(db);
+    pushToGitHub(`scripts/${fileName}`, content, `Upload script: ${fileName}`);
+
     res.json({
         success: true,
-        loadstring: `loadstring(game:HttpGet("https://carbonstudios.xyz/scripts/${newScriptName}"))()`
+        loadstring: `loadstring(game:HttpGet("https://carbonstudios.xyz/scripts/${fileName}"))()`
     });
 });
 
-syncDataFromGitHub().then(() => {
-    server.listen(PORT, () => {
-        console.log(`Server running on port ${PORT}`);
-    });
+// ROBLOX SCRIPT DELIVERY
+app.get('/scripts/:file', (req, res) => {
+    const db = getDB();
+    const script = db.scripts.find(s => s.name === req.params.file);
+    if (!script) return res.status(404).send('Script not found');
+    res.setHeader('Content-Type', 'text/plain');
+    res.send(script.content);
+});
+
+// REAL-TIME
+io.on('connection', (socket) => {
+    socket.emit('initial_data', getDB());
+});
+
+// START
+syncFromGitHub().then(() => {
+    server.listen(PORT, () => console.log(`[SERVER] Running at http://localhost:${PORT}`));
 });
