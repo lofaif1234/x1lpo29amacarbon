@@ -1,0 +1,11 @@
+{
+  "executors": [],
+  "games": [],
+  "scripts": [
+    {
+      "name": "loader.lua",
+      "content": "print(\"lol\")",
+      "timestamp": "2026-03-23T18:49:10.850Z"
+    }
+  ]
+}
