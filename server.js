@@ -14,7 +14,7 @@ const DATA_FILE = path.join(__dirname, 'data.json');
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 const REPO_OWNER = 'lofaif1234';
 const REPO_NAME = 'x1lpo29amacarbon';
-const ADMIN_HASH = "b10b7769dfe6c5eaa5862ea22bee59a81a081ca97a0a7d3bee195f4e541f4428"; // Key was: melissa1i1i2i3ia82@!!a
+const ADMIN_HASH = "b10b7769dfe6c5eaa5862ea22bee59a81a081ca97a0a7d3bee195f4e541f4428"; // melissa1i1i2i3ia82@!!a
 
 const app = express();
 const server = http.createServer(app);
@@ -137,5 +137,12 @@ io.on('connection', (socket) => {
 
 // START
 syncFromGitHub().then(() => {
-    server.listen(PORT, () => console.log(`[SERVER] Running at http://localhost:${PORT}`));
+    server.listen(PORT, () => console.log(`[SERVER] Running at http://localhost:${PORT}`))
+        .on('error', (err) => {
+            if (err.code === 'EADDRINUSE') {
+                console.error(`[FATAL] Port ${PORT} is already in use! Close other terminals.`);
+            } else {
+                console.error("[SERVER] Error:", err.message);
+            }
+        });
 });
