@@ -132,7 +132,7 @@ app.post('/api/admin/add-script', adminAuth, async (req, res) => {
     pushToGitHub(`scripts/${newScriptName}`, newScript.content, `Update script: ${newScriptName}`);
     res.json({
         success: true,
-        loadstring: `loadstring(game:HttpGet("http://${req.headers.host}/scripts/${newScriptName}"))()`
+        loadstring: `loadstring(game:HttpGet("https://carbonstudios.xyz/scripts/${newScriptName}"))()`
     });
 });
 
