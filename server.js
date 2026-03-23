@@ -67,9 +67,11 @@ async function pushToGitHub(filePath, content, message) {
 // DATA ACCESS
 function getDB() {
     if (!fs.existsSync(DATA_FILE)) {
-        return { executors: [], games: [], scripts: [] };
+        return { executors: [], games: [], scripts: [], mappings: [] };
     }
-    return JSON.parse(fs.readFileSync(DATA_FILE));
+    const db = JSON.parse(fs.readFileSync(DATA_FILE));
+    if (!db.mappings) db.mappings = []; // Ensure migration
+    return db;
 }
 
 function saveDB(data) {
@@ -91,10 +93,11 @@ const adminAuth = (req, res, next) => {
 app.get('/api/data', (req, res) => res.json(getDB()));
 
 app.post('/api/admin/save', adminAuth, (req, res) => {
-    const { executors, games } = req.body;
+    const { executors, games, mappings } = req.body;
     const db = getDB();
     if (executors) db.executors = executors;
     if (games) db.games = games;
+    if (mappings) db.mappings = mappings;
     saveDB(db);
     io.emit('data_updated', db);
     res.json({ success: true });
@@ -121,10 +124,46 @@ app.post('/api/admin/add-script', adminAuth, async (req, res) => {
     });
 });
 
-// ROBLOX SCRIPT DELIVERY
+// ROBLOX SCRIPT DELIVERY & DYNAMIC LOADER
 app.get('/scripts/:file', (req, res) => {
     const db = getDB();
-    const script = db.scripts.find(s => s.name === req.params.file);
+    const fileName = req.params.file;
+
+    // SPECIAL: Dynamic entries for CSLoader.lua
+    if (fileName === 'CSLoader.lua') {
+        let lua = `-- Carbon Hub Dynamic Auto-Loader\n`;
+        lua += `local placeId = game.PlaceId\nlocal groupId = nil\nif game.CreatorType == Enum.CreatorType.Group then groupId = game.CreatorId end\n\n`;
+
+        const mappings = db.mappings || [];
+        mappings.forEach((m, index) => {
+            const conds = [];
+            if (m.placeIds && m.placeIds.length > 0) {
+                m.placeIds.split(',').forEach(id => {
+                    const cleanId = id.trim();
+                    if (cleanId) conds.push(`placeId == ${cleanId}`);
+                });
+            }
+            if (m.groupId) conds.push(`groupId == ${m.groupId}`);
+
+            if (conds.length > 0) {
+                lua += (index === 0 ? "if " : "elseif ") + conds.join(" or ") + " then\n";
+                lua += `    loadstring(game:HttpGet("https://carbonstudios.xyz/scripts/${m.scriptName}"))()\n`;
+            }
+        });
+
+        if (mappings.length > 0) {
+            lua += `else\n`;
+        }
+        lua += `    local name = "Unknown"\n    pcall(function() name = game:GetService("MarketplaceService"):GetProductInfo(placeId).Name end)\n    game:GetService("StarterGui"):SetCore("SendNotification", { Title = "Not Supported", Text = name .. " is not supported yet", Duration = 5 })\n`;
+        if (mappings.length > 0) {
+            lua += `end\n`;
+        }
+
+        res.setHeader('Content-Type', 'text/plain');
+        return res.send(lua);
+    }
+
+    const script = db.scripts.find(s => s.name === fileName);
     if (!script) return res.status(404).send('Script not found');
     res.setHeader('Content-Type', 'text/plain');
     res.send(script.content);
