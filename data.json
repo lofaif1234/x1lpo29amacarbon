@@ -6,6 +6,12 @@
       "name": "loader.lua",
       "content": "print(\"lol\")",
       "timestamp": "2026-03-23T18:49:10.850Z"
+    },
+    {
+      "name": "printing.lua",
+      "content": "hahahha",
+      "timestamp": "2026-03-23T19:01:29.247Z"
     }
-  ]
+  ],
+  "mappings": []
 }
