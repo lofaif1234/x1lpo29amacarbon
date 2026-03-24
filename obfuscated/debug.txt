@@ -1,0 +1,1 @@
+ executor?'); if (confirmed) { executors = executors.filter(e => e.id !== id); saveAndRender(); } } window.deleteGame = async function (id) { const co
