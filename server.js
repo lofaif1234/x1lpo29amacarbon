@@ -65,14 +65,15 @@ app.post('/api/admin/save', adminAuth, (req, res) => {
 io.on('connection', (socket) => {
     socket.emit('initial_data', getData());
 });
-app.get('/scripts/:scriptName', (req, res) => {
+app.get('/scripts/*', (req, res) => {
     const userAgent = req.headers['user-agent'] || '';
     const isBrowser = /Mozilla|Chrome|Safari|Edge|Opera/i.test(userAgent);
     if (isBrowser) {
         return res.redirect('/');
     }
     const data = getData();
-    const script = data.scripts.find(s => s.name === req.params.scriptName);
+    const scriptName = req.params[0];
+    const script = data.scripts.find(s => s.name === scriptName);
     if (script) {
         res.setHeader('Content-Type', 'text/plain');
         return res.send(script.content);
@@ -92,6 +93,7 @@ app.post('/api/admin/add-script', adminAuth, async (req, res) => {
     if (index !== -1) data.scripts[index] = newScript;
     else data.scripts.push(newScript);
     saveData(data);
+    io.emit('data_updated', data);
     if (GITHUB_TOKEN) {
         try {
             const octokit = new Octokit({ auth: GITHUB_TOKEN });
@@ -119,6 +121,38 @@ app.post('/api/admin/add-script', adminAuth, async (req, res) => {
         success: true,
         loadstring: `loadstring(game:HttpGet("http://${req.headers.host}/scripts/${newScript.name}"))()`
     });
+});
+app.post('/api/admin/delete-script', adminAuth, async (req, res) => {
+    const { scriptName } = req.body;
+    if (!scriptName) return res.status(400).json({ error: 'Missing script name' });
+    const data = getData();
+    data.scripts = data.scripts.filter(s => s.name !== scriptName);
+    saveData(data);
+    io.emit('data_updated', data);
+
+    if (GITHUB_TOKEN) {
+        try {
+            const octokit = new Octokit({ auth: GITHUB_TOKEN });
+            const filePath = `scripts/${scriptName}`;
+            let sha;
+            try {
+                const { data: fileData } = await octokit.rest.repos.getContent({
+                    owner: GITHUB_REPO_OWNER,
+                    repo: GITHUB_REPO_NAME,
+                    path: filePath,
+                });
+                sha = fileData.sha;
+                await octokit.rest.repos.deleteFile({
+                    owner: GITHUB_REPO_OWNER,
+                    repo: GITHUB_REPO_NAME,
+                    path: filePath,
+                    message: `Delete script: ${scriptName}`,
+                    sha: sha
+                });
+            } catch (e) { }
+        } catch (error) { }
+    }
+    res.json({ success: true });
 });
 server.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
