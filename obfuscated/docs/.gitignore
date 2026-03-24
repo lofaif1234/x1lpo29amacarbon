@@ -4,19 +4,21 @@ node_modules/
 data.json
 
 # Original Frontend Source (to be hidden)
-index.html
-admin.html
-app.js
-admin-logic.js
-styles.css
-script.js
-obfuscate.js
-obfuscate.py
-custom cursor/
-images/
+/index.html
+/admin.html
+/app.js
+/admin-logic.js
+/styles.css
+/script.js
+/obfuscate.js
+/obfuscate.py
+/custom cursor/
+/images/
+/obfuscated/
 
 # UNIGNORE THE PRODUCTION BUILD
-!obfuscated/
+!/docs/
+!/docs/**
 !server.js
 !package.json
 !package-lock.json

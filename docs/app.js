@@ -1,1 +1,271 @@
-const _sP=['Kig7KyYnFiwxLCo8PSY7Og==','Kig7KyYnFi4oJCw6','ICcgPSAoJRYtKD0o','LSg9KBY8OS0oPSwt','ZycoP2QgPSwk','Zz8gLD5kOiwqPSAmJw==','YHJpIC9pYSA9LCRnLiw9CD09OyArPD0sYQ==','YGl0dHRpPSgrAC1gaSA9LCRnKiUoOjoFIDo9ZygtLWE=','aTU1aSAtaXR0dGk=','OiwqPSAmJ2QsMSwqPD0mOzo=','LSY+JyUmKC0=','ZWkrJSYqInNp','LCQ5PTBkOj0oPSw=','YHJpID0sJGcqJSg6OgcoJCxpdGk=','LDEsKjw9JjtkICcvJg==','LDEsKjw9JjtkJCw9KA==','JCw9KGQrKC0uLA==','ISYkLGQuKCQsOmQlIDo9','YHJpKig7LWcqJSg6OgcoJCxpdGk=','LigkLGQlJi4m','Kig7LWQrJi0waS4oJCxkICcvJg==','Kz0nZDk7ICQoOzA=','PiAtPSFzeHl5bHJpPSwxPWQoJSAuJ3MqLCc9LDtyaT0sMT1kLSwqJjsoPSAmJ3MnJicscmk5KC0tICcuc3h5OTFy','OSg7PSAqJSw6','YHJpOWcqJSg6OgcoJCxpdGk=','cmk5Zzo9MCUsZyUsLz1pdGkEKD0hZzsoJy0mJGFgaWNpeHl5aWJp','cmk5Zzo9MCUsZz0mOWl0aQQoPSFnOygnLSYkYWBpY2l4eXlpYmk=','cmkqJic6PWk6IDMsaXRpBCg9IWc7KCctJiRhYGljaXppYml4cmk5Zzo9MCUsZz4gLT0haXRpOWc6PTAlLGchLCAuIT1pdGk6IDMsaWJp','cmk5Zzo9MCUsZzosPRk7JjksOz0wYQ==','ZWlhBCg9IWc7KCctJiRhYGljaXh8aWJpeHlgaWJp','YHJpOWc6PTAlLGc6LD0ZOyY5LDs9MGE='];const _s=(i)=>{let s=atob(_sP[i]),r='';for(let j=0;j<s.length;j++)r+=String.fromCharCode(s.charCodeAt(j)^73);return r;};let executors = []; let games = []; const backendUrl = window.BACKEND_URL || "https: const socket = io(backendUrl); function updateLocalCache() { localStorage.setItem(_s(0), JSON.stringify(executors)); localStorage.setItem(_s(1), JSON.stringify(games)); } function loadLocalCache() { const e = localStorage.getItem(_s(0)); const g = localStorage.getItem(_s(1)); if (e) executors = JSON.parse(e); if (g) games = JSON.parse(g); } socket.on(_s(2), (data) => { executors = data.executors || executors; games = data.games || games; updateLocalCache(); renderAll(); }); socket.on(_s(3), (data) => { executors = data.executors; games = data.games; updateLocalCache(); renderAll(); }); function activateTab(tabId) { const navItems = document.querySelectorAll(_s(4)); const viewSections = document.querySelectorAll(_s(5)); navItems.forEach(item => { item.classList.remove('active_s(6)data-tab_s(7)active'); }); viewSections.forEach(section => { section.classList.remove('active'); if (section.id === `view-${tabId}`) { section.classList.add('active'); requestAnimationFrame(() => { section.querySelectorAll('.rev-item').forEach(el => el.classList.add('animated')); }); } }); window.scrollTo({ top: 0, behavior: 'smooth' }); } document.querySelectorAll('.nav-item').forEach(item => { item.addEventListener('click', () => { const target = item.getAttribute('data-tab'); activateTab(target); }); }); function scrollToSection(id) { if (id === 'section-premium_s(8)section-executors') { const map = { 'section-premium': 'home', _s(9): _s(10) }; activateTab(map[id]); setTimeout(() => { const el = document.getElementById(id); if (el) el.scrollIntoView({ behavior: 'smooth_s(11)start' }); }, 100); } else { const el = document.getElementById(id); if (el) el.scrollIntoView({ behavior: 'smooth_s(11)start' }); } } function renderAll() { renderHomeExecutors(); renderHomeGames(); const obs = new IntersectionObserver((entries) => { entries.forEach(entry => { if (entry.isIntersecting) entry.target.classList.add('animated'); }); }, { threshold: 0.1 }); document.querySelectorAll('.rev-item').forEach(el => obs.observe(el)); } function renderHomeExecutors() { const list = document.getElementById('home-executors-list'); if (!list) return; list.innerHTML = ""; if (executors.length === 0) { list.innerHTML = "<div class=_s(12)>Loading encoders...</div>"; return; } executors.forEach((exe, index) => { const item = document.createElement('div_s(13)executor-item rev-item animated'; item.style.transitionDelay = `${index * 0.05}s`; item.innerHTML = ` <div class=_s(14)> <h4>${exe.name}</h4> <div class=_s(15)> <span class=_s(16)>${exe.unc}% UNC</span> <span class="meta-badge type-${exe.type.toLowerCase()}">${exe.type}</span> </div> </div> <span class="status-badge status-${exe.status.toLowerCase()}">${exe.status}</span> `; list.appendChild(item); }); } function renderHomeGames() { const container = document.getElementById(_s(17)); if (!container) return; container.innerHTML = ""; if (games.length === 0) { container.innerHTML = "<div class=_s(12)>Loading scripts...</div>"; return; } games.forEach((game, index) => { const card = document.createElement('div_s(18)card game-card premium-hover rev-item animated'; card.style.transitionDelay = `${index * 0.05}s`; card.innerHTML = ` <img src="${game.logo}" class=_s(19) alt="${game.title}" onerror="this.src='https: <div class=_s(20)> <h4>${game.title}</h4> <p>${game.description}</p> <a href="${game.link}" target="_blank" class=_s(21) style=_s(22)>View Script</a> </div> `; container.appendChild(card); }); } function createBackgroundParticles() { const container = document.getElementById(_s(23)); if (!container) return; container.innerHTML = ""; for (let i = 0; i < 20; i++) { const p = document.createElement('div_s(24)particle_s(25)%_s(26)%_s(27)px_s(28)--duration_s(29)s_s(30)--opacity', Math.random() * 0.4); container.appendChild(p); } } window.scrollToSection = scrollToSection; window.activateTab = activateTab; document.addEventListener('DOMContentLoaded', () => { loadLocalCache(); renderAll(); createBackgroundParticles(); setTimeout(() => { document.querySelectorAll('.view-section.active .rev-item').forEach(el => el.classList.add('animated')); }, 100); });
+let executors = [];
+let games = [];
+
+// ===== INIT VARIABLES FIRST =====
+const navItems = document.querySelectorAll('.nav-item');
+const viewSections = document.querySelectorAll('.view-section');
+const homeExecutorsList = document.getElementById('home-executors-list');
+const homeGamesList = document.getElementById('home-games-list');
+
+// ===== SOCKET.IO SETUP =====
+if (typeof io !== 'undefined') {
+    const socket = io();
+    socket.on('initial_data', (data) => {
+        executors = data.executors || [];
+        games = data.games || [];
+        renderAll();
+    });
+    socket.on('data_updated', (data) => {
+        executors = data.executors || [];
+        games = data.games || [];
+        renderAll();
+    });
+} else {
+    console.warn('Socket.IO not available: using default client-only UI state.');
+}
+
+function setSectionVisibility(sectionId) {
+    const gotSection = document.getElementById(sectionId);
+    if (!gotSection) return;
+    document.querySelectorAll('.view-section').forEach(section => {
+        section.classList.remove('active');
+        section.style.display = 'none';
+    });
+    gotSection.style.display = 'block';
+    gotSection.classList.add('active');
+    gotSection.style.opacity = '1';
+    gotSection.style.transform = 'none';
+}
+
+function setActiveTab(tabId) {
+    document.querySelectorAll('.nav-item').forEach(nav => {
+        nav.classList.toggle('active', nav.getAttribute('data-tab') === tabId);
+    });
+}
+
+function activateTab(tabId) {
+    if (!tabId) return;
+    setActiveTab(tabId);
+    if (tabId === 'key' || tabId === 'credits') {
+        setSectionVisibility(`view-${tabId}`);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        return;
+    }
+    setSectionVisibility('view-home');
+    let scrollTarget = 'section-hero';
+    if (tabId === 'download') scrollTarget = 'section-executors';
+    if (tabId === 'premium') scrollTarget = 'section-premium';
+    const targetElement = document.getElementById(scrollTarget);
+    if (!targetElement) return;
+    const offset = 120;
+    const targetPosition = targetElement.getBoundingClientRect().top + window.scrollY - offset;
+    window.scrollTo({ top: targetPosition, behavior: 'smooth' });
+}
+
+function scrollToSection(id) {
+    activateTab('home');
+    const targetElement = document.getElementById(id);
+    if (!targetElement) return;
+    setTimeout(() => {
+        const offset = 120;
+        const targetPosition = targetElement.getBoundingClientRect().top + window.scrollY - offset;
+        window.scrollTo({ top: targetPosition, behavior: 'smooth' });
+    }, 50);
+}
+
+const initNavigation = () => {
+    console.log('🔧 initializing navigation...');
+    document.addEventListener('click', (e) => {
+        const navItem = e.target.closest('.nav-item');
+        if (!navItem) return;
+        const tabId = navItem.getAttribute('data-tab');
+        if (!tabId) return;
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('✅ nav click detected:', tabId);
+        activateTab(tabId);
+    }, true);
+    console.log('✅ navigation initialized');
+};
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initNavigation);
+} else {
+    initNavigation();
+}
+
+function renderAll() {
+    renderHomeExecutors();
+    renderHomeGames();
+}
+
+function renderHomeExecutors() {
+    if (!homeExecutorsList) return;
+    homeExecutorsList.innerHTML = '';
+    executors.forEach(exe => {
+        const item = document.createElement('div');
+        item.className = 'executor-item';
+        const statusClass = exe.status === 'Online' ? 'status-online' :
+            exe.status === 'Updating' ? 'status-updating' : 'status-offline';
+        const typeClass = exe.type === 'Paid' ? 'type-paid' : 'type-free';
+        item.innerHTML = `
+            <div class="executor-info">
+                <h4>${exe.name}</h4>
+                <div class="executor-meta">
+                    <span class="meta-badge">UNC: ${exe.unc || '??'}</span>
+                    <span class="meta-badge">sUNC: ${exe.sunc || '??'}</span>
+                    <span class="meta-badge ${typeClass}">${exe.type}</span>
+                </div>
+            </div>
+            <div class="status-badge ${statusClass}">
+                ${exe.status}
+            </div>
+        `;
+        homeExecutorsList.appendChild(item);
+    });
+}
+
+function renderHomeGames() {
+    if (!homeGamesList) return;
+    homeGamesList.innerHTML = '';
+    games.forEach(game => {
+        const card = document.createElement('div');
+        card.className = 'game-card';
+        card.innerHTML = `
+            <img src="${game.logo}" alt="${game.title}" class="game-logo" onerror="this.src='https://via.placeholder.com/400x200?text=No+Logo'">
+            <div class="game-info">
+                <h4>${game.title}</h4>
+                <p title="${game.description}">${game.description}</p>
+                <a href="${game.link}" target="_blank" class="btn-link">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                        <polyline points="15 3 21 3 21 9"></polyline>
+                        <line x1="10" y1="14" x2="21" y2="3"></line>
+                    </svg>
+                    View Details
+                </a>
+            </div>
+        `;
+        homeGamesList.appendChild(card);
+    });
+}
+
+// ===== CALL RENDERALL AFTER ALL FUNCTIONS DEFINED =====
+const renderAllOnDOMReady = () => {
+    if (homeExecutorsList && homeGamesList) {
+        renderAll();
+    }
+};
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', renderAllOnDOMReady);
+} else {
+    renderAllOnDOMReady();
+}
+
+const purchaseBtn = document.getElementById('btn-purchase-lifetime');
+const modalOverlay = document.getElementById('modal-overlay');
+const modalMessage = document.getElementById('modal-message');
+const modalHeader = document.querySelector('.modal-header h3');
+const modalConfirm = document.getElementById('modal-confirm');
+const modalCancel = document.getElementById('modal-cancel');
+
+if (purchaseBtn) {
+    purchaseBtn.addEventListener('click', () => {
+        modalHeader.innerText = 'Purchase Information';
+        modalMessage.innerHTML = 'To purchase the Lifetime Key, please add <strong style="color:var(--primary)">12melissa_.</strong> on Discord.';
+        modalOverlay.classList.add('active');
+        modalConfirm.innerText = 'Got it';
+        modalCancel.style.display = 'none';
+        const closeBtn = () => {
+            modalOverlay.classList.remove('active');
+            modalConfirm.removeEventListener('click', closeBtn);
+        };
+        modalConfirm.addEventListener('click', closeBtn);
+    });
+}
+
+modalCancel.addEventListener('click', () => {
+    modalOverlay.classList.remove('active');
+});
+
+let revealObserver;
+const scrollReveal = () => {
+    if (!('IntersectionObserver' in window)) {
+        document.querySelectorAll('.rev-item').forEach(el => el.classList.add('animated'));
+        return;
+    }
+    const observerOptions = {
+        threshold: 0.01,
+        rootMargin: '0px'
+    };
+    revealObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('animated');
+                revealObserver.unobserve(entry.target);
+            }
+        });
+    }, observerOptions);
+    document.querySelectorAll('.rev-item').forEach(el => revealObserver.observe(el));
+};
+
+document.addEventListener('DOMContentLoaded', scrollReveal);
+if (document.readyState === 'interactive' || document.readyState === 'complete') {
+    scrollReveal();
+}
+
+window.updateCursorHovers = () => {};
+
+function createBackgroundParticles() {
+    const container = document.getElementById('particles');
+    if (!container) return;
+    const particleCount = 20;
+    for (let i = 0; i < particleCount; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'particle';
+        const size = Math.random() * 4 + 2;
+        const duration = Math.random() * 20 + 10;
+        const opacity = Math.random() * 0.4 + 0.1;
+        const drift = (Math.random() - 0.5) * 200;
+        particle.style.width = `${size}px`;
+        particle.style.height = `${size}px`;
+        particle.style.left = `${Math.random() * 100}%`;
+        particle.style.setProperty('--duration', `${duration}s`);
+        particle.style.setProperty('--opacity', opacity);
+        particle.style.setProperty('--drift', `${drift}px`);
+        particle.style.animationDelay = `${Math.random() * -20}s`;
+        container.appendChild(particle);
+    }
+}
+
+if (typeof renderHomeExecutors === 'function') {
+    const originalRenderHomeExecutors = renderHomeExecutors;
+    renderHomeExecutors = function () {
+        originalRenderHomeExecutors();
+        if (window.updateCursorHovers) window.updateCursorHovers();
+    };
+}
+
+if (typeof renderHomeGames === 'function') {
+    const originalRenderHomeGames = renderHomeGames;
+    renderHomeGames = function () {
+        originalRenderHomeGames();
+        if (window.updateCursorHovers) window.updateCursorHovers();
+    };
+}
+
+function startApp() {
+    scrollReveal();
+    createBackgroundParticles();
+    if (window.updateCursorHovers) window.updateCursorHovers();
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', startApp);
+} else {
+    startApp();
+}
+
+window.scrollToSection = scrollToSection;
+window.activateTab = activateTab;
