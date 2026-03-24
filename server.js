@@ -20,7 +20,7 @@ const DATA_FILE = path.join(__dirname, 'data.json');
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 const GITHUB_REPO_OWNER = 'melissaxe4-droid';
 const GITHUB_REPO_NAME = 'carbonstudios';
-const LICENSE_HASH = "478911e5bbda60b20801e0a9e6ecac4b087a173405f8ca926c35ca4ab4ed98b";
+const LICENSE_HASH = "478911e5bbda60b20801e0a9e6ecac44f7a173405f8ca926c35ca4ab4ed98b08";
 function adminAuth(req, res, next) {
     const auth = req.headers['authorization'];
     if (auth === LICENSE_HASH) {
