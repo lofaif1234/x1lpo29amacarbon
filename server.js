@@ -44,8 +44,34 @@ if (!fs.existsSync(DATA_FILE)) {
 function getData() {
     return JSON.parse(fs.readFileSync(DATA_FILE));
 }
+async function backupDataJSON(data) {
+    if (!GITHUB_TOKEN) return;
+    try {
+        const octokit = new Octokit({ auth: GITHUB_TOKEN });
+        const content = Buffer.from(JSON.stringify(data, null, 2)).toString('base64');
+        let sha;
+        try {
+            const { data: fileData } = await octokit.rest.repos.getContent({
+                owner: GITHUB_REPO_OWNER,
+                repo: GITHUB_REPO_NAME,
+                path: 'data.json'
+            });
+            sha = fileData.sha;
+        } catch (e) { }
+        await octokit.rest.repos.createOrUpdateFileContents({
+            owner: GITHUB_REPO_OWNER,
+            repo: GITHUB_REPO_NAME,
+            path: 'data.json',
+            message: 'DWINADIANDA [skip ci]',
+            content: content,
+            sha: sha
+        });
+    } catch (e) { }
+}
+
 function saveData(data) {
     fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
+    backupDataJSON(data);
 }
 app.use(cors());
 app.use(bodyParser.json());
