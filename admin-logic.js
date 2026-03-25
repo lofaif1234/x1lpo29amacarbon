@@ -329,8 +329,28 @@ if (formAddGameScript) {
         }
     });
 }
+window.switchTab = function (tabId) {
+    document.querySelectorAll('.tab-content').forEach(tab => {
+        tab.classList.remove('active');
+    });
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+
+    document.getElementById(tabId).classList.add('active');
+    const activeBtn = Array.from(document.querySelectorAll('.tab-btn')).find(btn => btn.getAttribute('onclick').includes(tabId));
+    if (activeBtn) activeBtn.classList.add('active');
+
+    // Re-layout monaco editor if switching to Loader tab
+    if (tabId === 'tab-loader' && monacoEditor) {
+        setTimeout(() => {
+            monacoEditor.layout();
+        }, 100);
+    }
+};
+
 checkAuth();
-// Custom cursor removed from admin UI to restore default pointer behavior and make UI fully accessible.
+
 function createBackgroundParticles() {
     const container = document.getElementById('particles');
     if (!container) return;
