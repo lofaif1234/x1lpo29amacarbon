@@ -74,8 +74,27 @@ function saveData(data) {
     backupDataJSON(data);
 }
 app.use(cors());
-app.use(bodyParser.json());
+app.use(bodyParser.json({ limit: '100mb' }));
+app.use(bodyParser.urlencoded({ limit: '100mb', extended: true }));
 app.use(express.static(path.join(__dirname, 'obfuscated')));
+
+async function syncDataFromGitHub() {
+    if (!GITHUB_TOKEN) return;
+    try {
+        const octokit = new Octokit({ auth: GITHUB_TOKEN });
+        try {
+            const { data: fileData } = await octokit.rest.repos.getContent({
+                owner: GITHUB_REPO_OWNER,
+                repo: GITHUB_REPO_NAME,
+                path: 'data.json'
+            });
+            const content = Buffer.from(fileData.content, 'base64').toString('utf-8');
+            fs.writeFileSync(DATA_FILE, content);
+        } catch (e) {
+            // file might not exist in repo yet, that's fine
+        }
+    } catch (e) { }
+}
 app.get('/api/data', (req, res) => {
     res.json(getData());
 });
@@ -180,6 +199,7 @@ app.post('/api/admin/delete-script', adminAuth, async (req, res) => {
     }
     res.json({ success: true });
 });
-server.listen(PORT, () => {
+server.listen(PORT, async () => {
+    await syncDataFromGitHub();
     console.log(`Server running on http://localhost:${PORT}`);
 });
