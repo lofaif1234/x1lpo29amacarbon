@@ -187,7 +187,7 @@ const modalCancel = document.getElementById('modal-cancel');
 if (purchaseBtn) {
     purchaseBtn.addEventListener('click', () => {
         modalHeader.innerText = 'Purchase Information';
-        modalMessage.innerHTML = 'To purchase the Lifetime Key, please add <strong style="color:var(--primary)">12melissa_.</strong> on Discord.';
+        modalMessage.innerHTML = 'To purchase the Lifetime Key, please add <strong style="color:var(--primary)">2.0</strong> on Discord.';
         modalOverlay.classList.add('active');
         modalConfirm.innerText = 'Got it';
         modalCancel.style.display = 'none';
