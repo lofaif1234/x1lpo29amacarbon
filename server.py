@@ -20,7 +20,7 @@ GITHUB_REPO_NAME = os.getenv('GITHUB_REPO_NAME', 'carbonstudios')
 LICENSE_HASH = os.getenv('LICENSE_HASH')
 
 def admin_auth(f):
-    def wrapper(*args, **kwargs):
+    def wrapper(*args, **kwargs):   
         auth = request.headers.get('Authorization')
         if auth == LICENSE_HASH:
             return f(*args, **kwargs)
@@ -31,13 +31,8 @@ def admin_auth(f):
 def get_data():
     if not os.path.exists(DATA_FILE):
         default_data = {
-            "executors": [
-                { "id": 1, "name": "Carbon API", "status": "Online", "unc": "100%", "sunc": "100%", "type": "Free" },
-                { "id": 2, "name": "Synapse Z", "status": "Updating", "unc": "98%", "sunc": "95%", "type": "Paid" }
-            ],
-            "games": [
-                { "id": 1, "title": "Evade Overhaul", "logo": "https://tr.rbxcdn.com/39a6ba2c6e61298c4d29cae97ac471c2/768/432/Image/Png", "link": "https://www.roblox.com/games/7133251093/Evade", "description": "Features, Automatic Farm, Visual items, Name tag changer, Player modifications and 60+ more features." }
-            ],
+            "executors": [],
+            "games": [],
             "scripts": []
         }
         with open(DATA_FILE, 'w') as f:
